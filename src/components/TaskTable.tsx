@@ -1,9 +1,11 @@
 import { useEffect, useState } from "react";
 import { getTasks, deleteTask, Task, updateTask } from "../services/TaskService";
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, MenuItem, Box, Typography, TablePagination } from "@mui/material";
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper, Button, TextField, Box, Typography } from "@mui/material";
 import { useNavigate } from "react-router-dom";
+import TaskFilters from "./tasks/TaskFilters"; 
+import TaskRow from "./tasks/TaskRow";
+import TaskPagination from './tasks/TaskPagination';
 import SearchIcon from '@mui/icons-material/Search';
-import FilterAltIcon from '@mui/icons-material/FilterAlt';
 
 const TaskTable = () => {
   const [tasks, setTasks] = useState<Task[]>([]); 
@@ -90,69 +92,18 @@ const TaskTable = () => {
         Agregar Tarea
       </Button>      
       
-      <Box sx={{ padding: 2 }}>      
-        <Paper elevation={3} sx={{ padding: 2, marginBottom: 3 }}>
-          <Typography variant="h6" sx={{ marginBottom: 2 }}>
-          <Box display="inline-flex" alignItems="center">
-          <FilterAltIcon sx={{ marginRight: 1 }} />
-            Filtros y Ordenamiento
-            </Box>
-          </Typography>
-          <Box sx={{ display: "flex", gap: "15px" }}>
-            <TextField
-              select
-              label="Filtrar por Estado"
-              value={filterStatus}
-              onChange={(e) => setFilterStatus(e.target.value)}
-              sx={{ width: 200 }}
-            >
-              <MenuItem value="">Todos</MenuItem>
-              <MenuItem value="PENDING">Pendiente</MenuItem>
-              <MenuItem value="IN_PROGRESS">En Progreso</MenuItem>
-              <MenuItem value="COMPLETED">Completada</MenuItem>
-            </TextField>
+      <TaskFilters 
+        filterStatus={filterStatus}
+        setFilterStatus={setFilterStatus}
+        filterPriority={filterPriority}
+        setFilterPriority={setFilterPriority}
+        filterCategory={filterCategory}
+        setFilterCategory={setFilterCategory}
+        sortOrder={sortOrder}
+        setSortOrder={setSortOrder}
+        tasks={tasks}
+      />
 
-            <TextField
-              select
-              label="Filtrar por Prioridad"
-              value={filterPriority}
-              onChange={(e) => setFilterPriority(e.target.value)}
-              sx={{ width: 200 }}
-            >
-              <MenuItem value="">Todas</MenuItem>
-              <MenuItem value="HIGH">Alta</MenuItem>
-              <MenuItem value="MEDIUM">Media</MenuItem>
-              <MenuItem value="LOW">Baja</MenuItem>
-            </TextField>
-
-            <TextField
-              select
-              label="Filtrar por Categoría"
-              value={filterCategory}
-              onChange={(e) => setFilterCategory(e.target.value)}
-              sx={{ width: 200 }}
-            >
-              <MenuItem value="">Todas</MenuItem>
-              {Array.from(new Set(tasks.map(task => task.category).filter(Boolean))).map(category => (
-                <MenuItem key={category} value={category}>{category}</MenuItem>
-              ))}
-            </TextField>
-
-            <TextField
-              select
-              label="Ordenar por"
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              sx={{ width: 200 }}
-            >
-              <MenuItem value="">Ninguno</MenuItem>
-              <MenuItem value="dateAsc">Fecha Ascendente</MenuItem>
-              <MenuItem value="dateDesc">Fecha Descendente</MenuItem>
-              <MenuItem value="priorityHigh">Prioridad Alta Primero</MenuItem>
-              <MenuItem value="priorityLow">Prioridad Baja Primero</MenuItem>
-            </TextField>
-          </Box>
-        </Paper>
         <Paper elevation={3} sx={{ padding: 2, marginBottom: 3 }}>      
           <Typography variant="h6" sx={{ marginBottom: 2 }}>
             <Box display="inline-flex" alignItems="center">
@@ -183,45 +134,25 @@ const TaskTable = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {paginatedTasks.map((task) => (
-              <TableRow key={task.id}>
-                <TableCell>{task.id}</TableCell>
-                <TableCell>{task.title}</TableCell>
-                <TableCell>{task.description || "-"}</TableCell>
-                <TableCell>{task.dueDate ? new Date(task.dueDate).toLocaleDateString() : "-"}</TableCell>
-                <TableCell>{task.status}</TableCell>
-                <TableCell>{task.priority}</TableCell>
-                <TableCell>{task.category || "-"}</TableCell>
-                <TableCell>
-                  <Button variant="contained" color="success" onClick={() => handleComplete(task.id)}>
-                    Completar
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button variant="contained" onClick={() => navigate(`/editar/${task.id}`)}>
-                    Editar
-                  </Button>
-                </TableCell>
-                <TableCell>
-                  <Button variant="contained" color="secondary" onClick={() => handleDelete(task.id)}>
-                    Eliminar
-                  </Button>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
+              {paginatedTasks.map(task => (
+                <TaskRow
+                  key={task.id}
+                  task={task}
+                  handleComplete={handleComplete}
+                  handleDelete={handleDelete}
+                />
+              ))}
+            </TableBody>
         </Table>
-        <TablePagination
-            rowsPerPageOptions={[5, 10, 25]}
-            component="div"
-            count={filteredTasks.length} // Número total de tareas filtradas
-            rowsPerPage={rowsPerPage}
-            page={page}
-            onPageChange={handleChangePage}
-            onRowsPerPageChange={handleChangeRowsPerPage}
-          />
+        
       </TableContainer>
-      </Box>
+      <TaskPagination
+        count={filteredTasks.length}
+        rowsPerPage={rowsPerPage}
+        page={page}
+        onChangePage={handleChangePage}
+        onChangeRowsPerPage={handleChangeRowsPerPage}
+      />
     </div>
   );
 };
